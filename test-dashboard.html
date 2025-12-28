@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .loading {
+            color: #ff9800;
+        }
+        .success {
+            color: #4caf50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .response {
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 3px;
+            overflow: auto;
+            max-height: 200px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard API Test</h1>
+    
+    <div class="test-box">
+        <h3>Session Check</h3>
+        <div id="sessionCheck" class="loading">Testing session...</div>
+        <div id="sessionResponse" class="response"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>getUserStats Endpoint</h3>
+        <div id="userStats" class="loading">Testing getUserStats...</div>
+        <div id="userStatsResponse" class="response"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>getHabits Endpoint</h3>
+        <div id="getHabits" class="loading">Testing getHabits...</div>
+        <div id="getHabitsResponse" class="response"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>getTasks Endpoint</h3>
+        <div id="getTasks" class="loading">Testing getTasks...</div>
+        <div id="getTasksResponse" class="response"></div>
+    </div>
+
+    <script>
+        // Test session
+        fetch('session-check.php')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('sessionCheck').textContent = data.user_id ? `✓ User ID: ${data.user_id}` : '✗ No session';
+                document.getElementById('sessionCheck').className = data.user_id ? 'success' : 'error';
+                document.getElementById('sessionResponse').textContent = JSON.stringify(data, null, 2);
+                
+                // If session exists, test API endpoints
+                if (data.user_id) {
+                    testAPIs();
+                }
+            })
+            .catch(err => {
+                document.getElementById('sessionCheck').textContent = `✗ Error: ${err.message}`;
+                document.getElementById('sessionCheck').className = 'error';
+                document.getElementById('sessionResponse').textContent = err.toString();
+            });
+
+        function testAPIs() {
+            // Test getUserStats
+            fetch('api.php?action=getUserStats')
+                .then(r => r.json())
+                .then(data => {
+                    const success = data.success;
+                    document.getElementById('userStats').textContent = success ? '✓ getUserStats Success' : `✗ getUserStats Failed: ${data.message}`;
+                    document.getElementById('userStats').className = success ? 'success' : 'error';
+                    document.getElementById('userStatsResponse').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('userStats').textContent = `✗ Error: ${err.message}`;
+                    document.getElementById('userStats').className = 'error';
+                    document.getElementById('userStatsResponse').textContent = err.toString();
+                });
+
+            // Test getHabits
+            fetch('api.php?action=getHabits')
+                .then(r => r.json())
+                .then(data => {
+                    const success = data.success;
+                    const count = data.habits ? data.habits.length : 0;
+                    document.getElementById('getHabits').textContent = success ? `✓ getHabits Success (${count} habits)` : `✗ getHabits Failed: ${data.message}`;
+                    document.getElementById('getHabits').className = success ? 'success' : 'error';
+                    document.getElementById('getHabitsResponse').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('getHabits').textContent = `✗ Error: ${err.message}`;
+                    document.getElementById('getHabits').className = 'error';
+                    document.getElementById('getHabitsResponse').textContent = err.toString();
+                });
+
+            // Test getTasks
+            fetch('api.php?action=getTasks')
+                .then(r => r.json())
+                .then(data => {
+                    const success = data.success;
+                    const count = data.tasks ? data.tasks.length : 0;
+                    document.getElementById('getTasks').textContent = success ? `✓ getTasks Success (${count} tasks)` : `✗ getTasks Failed: ${data.message}`;
+                    document.getElementById('getTasks').className = success ? 'success' : 'error';
+                    document.getElementById('getTasksResponse').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    document.getElementById('getTasks').textContent = `✗ Error: ${err.message}`;
+                    document.getElementById('getTasks').className = 'error';
+                    document.getElementById('getTasksResponse').textContent = err.toString();
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Profile</title>
+    <style>
+        body {
+            background: #0d0d0d;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav a {
+            color: #4aa3ff;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            background: #1a1a1a;
+            color: #79b7ff;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            color: #79b7ff;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #b71c1c;
+        }
+
+        .profile-container {
+            background: #111;
+            border: 2px solid #4aa3ff;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(74, 163, 255, 0.2);
+        }
+
+        h1 {
+            color: #4aa3ff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .profile-item {
+            margin-bottom: 25px;
+        }
+
+        .profile-label {
+            color: #79b7ff;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .profile-value {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            color: white;
+            font-size: 16px;
+            word-break: break-all;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            background: #1b1b1b;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #4aa3ff;
+            box-shadow: 0 0 10px rgba(74, 163, 255, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .btn-edit {
+            background: #007bff;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-edit:hover {
+            background: #005fcc;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: #666;
+            color: white;
+            flex: 1;
+            display: none;
+        }
+
+        .btn-cancel:hover {
+            background: #555;
+        }
+
+        .btn-save {
+            background: #4caf50;
+            color: white;
+            flex: 1;
+            display: none;
+        }
+
+        .btn-save:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        #editMode {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div>
+                <a href="index.html">My Tasks</a>
+                <a href="history.html">History</a>
+                <a href="habits.html">Daily Habits</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="profile.html">Profile</a>
+            </div>
+            <div class="nav-right">
+                <span class="user-info" id="username"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="profile-container">
+        <h1>My Profile</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- View Mode -->
+        <div id="viewMode">
+            <div class="profile-item">
+                <div class="profile-label">Username</div>
+                <div class="profile-value" id="usernameValue"></div>
+            </div>
+
+            <div class="profile-item">
+                <div class="profile-label">Email</div>
+                <div class="profile-value" id="emailValue"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-edit" onclick="enableEdit()">Edit Profile</button>
+            </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div id="editMode">
+            <div class="profile-item">
+                <div class="profile-label">Username</div>
+                <div class="profile-value" id="editUsername" style="background: transparent; border: none; padding: 0;"></div>
+            </div>
+
+            <div class="profile-item">
+                <div class="profile-label">Email</div>
+                <input type="email" id="editEmail" placeholder="Enter your email">
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+                <button class="btn-cancel" onclick="disableEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('username').textContent = 'Welcome, ' + username;
+                return;
+            }
+            fetch('api.php?action=getProfile')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.user && data.user.username) {
+                        localStorage.setItem('username', data.user.username);
+                        document.getElementById('username').textContent = 'Welcome, ' + data.user.username;
+                    } else {
+                        window.location.href = 'auth.php';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = 'auth.php';
+                });
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('api.php?action=logout')
+                    .then(res => res.json())
+                    .then(data => {
+                        localStorage.removeItem('username');
+                        window.location.href = 'auth.php';
+                    });
+            }
+        }
+
+        function loadProfile() {
+            fetch('api.php?action=getProfile')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        displayProfile(data.user);
+                    }
+                });
+        }
+
+        function displayProfile(user) {
+            document.getElementById('usernameValue').textContent = user.username;
+            document.getElementById('emailValue').textContent = user.email;
+            document.getElementById('editUsername').textContent = user.username;
+            document.getElementById('editEmail').value = user.email;
+        }
+
+        function enableEdit() {
+            document.getElementById('viewMode').style.display = 'none';
+            document.getElementById('editMode').style.display = 'block';
+            document.querySelector('.btn-save').style.display = 'block';
+            document.querySelector('.btn-cancel').style.display = 'block';
+        }
+
+        function disableEdit() {
+            document.getElementById('viewMode').style.display = 'block';
+            document.getElementById('editMode').style.display = 'none';
+            document.querySelector('.btn-save').style.display = 'none';
+            document.querySelector('.btn-cancel').style.display = 'none';
+        }
+
+        function saveProfile() {
+            const email = document.getElementById('editEmail').value.trim();
+            const messageEl = document.getElementById('message');
+
+            if (!email) {
+                showMessage('Email is required', 'error');
+                return;
+            }
+
+            fetch('api.php?action=updateProfile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('Profile updated successfully!', 'success');
+                    setTimeout(() => {
+                        disableEdit();
+                        loadProfile();
+                    }, 1500);
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            });
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = 'message ' + type;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadProfile();
+        });
+    </script>
+</body>
+</html>

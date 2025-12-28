@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Error Diagnostics</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a2e; color: white; }
+        .test { background: #0f0f1e; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #4aa3ff; }
+        .success { border-left-color: #4caf50; }
+        .error { border-left-color: #f44336; }
+        code { background: #2a2a3e; padding: 10px; display: block; margin-top: 10px; border-radius: 3px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 API Error Diagnostics</h1>
+    
+    <div class="test">
+        <h3>1. Session Check</h3>
+        <button onclick="testSession()">Test Session</button>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. getUserStats API</h3>
+        <button onclick="testAPI('getUserStats')">Test getUserStats</button>
+        <div id="getUserStats-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. getHabits API</h3>
+        <button onclick="testAPI('getHabits')">Test getHabits</button>
+        <div id="getHabits-result"></div>
+    </div>
+
+    <div class="test">
+        <h3>4. getTasks API</h3>
+        <button onclick="testAPI('getTasks')">Test getTasks</button>
+        <div id="getTasks-result"></div>
+    </div>
+
+    <script>
+        function testSession() {
+            const el = document.getElementById('session-result');
+            el.innerHTML = 'Testing...';
+            fetch('session-check.php')
+                .then(r => r.json())
+                .then(data => {
+                    const isLoggedIn = data.user_id;
+                    el.innerHTML = `<div class="${isLoggedIn ? 'success' : 'error'}">
+                        User ID: ${data.user_id || 'NOT LOGGED IN'}<br>
+                        Username: ${data.username || 'N/A'}<br>
+                        <code>${JSON.stringify(data, null, 2)}</code>
+                    </div>`;
+                })
+                .catch(err => {
+                    el.innerHTML = `<div class="error">
+                        FETCH ERROR: ${err.message}<br>
+                        <code>${err.stack}</code>
+                    </div>`;
+                });
+        }
+
+        function testAPI(action) {
+            const el = document.getElementById(action + '-result');
+            el.innerHTML = 'Testing...';
+            
+            fetch(`api.php?action=${action}`)
+                .then(r => {
+                    console.log(`Response status: ${r.status}`);
+                    return r.text();
+                })
+                .then(text => {
+                    console.log(`Raw response: ${text.substring(0, 200)}`);
+                    try {
+                        const data = JSON.parse(text);
+                        const isSuccess = data.success;
+                        el.innerHTML = `<div class="${isSuccess ? 'success' : 'error'}">
+                            Success: ${data.success}<br>
+                            ${data.message ? `Message: ${data.message}<br>` : ''}
+                            <code>${JSON.stringify(data, null, 2)}</code>
+                        </div>`;
+                    } catch (e) {
+                        el.innerHTML = `<div class="error">
+                            JSON PARSE ERROR: ${e.message}<br>
+                            Raw Response:<br>
+                            <code>${text}</code>
+                        </div>`;
+                    }
+                })
+                .catch(err => {
+                    el.innerHTML = `<div class="error">
+                        FETCH ERROR: ${err.message}<br>
+                        <code>${err.stack}</code>
+                    </div>`;
+                });
+        }
+
+        // Auto-test all on page load
+        window.addEventListener('load', () => {
+            testSession();
+            setTimeout(() => testAPI('getUserStats'), 500);
+            setTimeout(() => testAPI('getHabits'), 1000);
+            setTimeout(() => testAPI('getTasks'), 1500);
+        });
+    </script>
+</body>
+</html>

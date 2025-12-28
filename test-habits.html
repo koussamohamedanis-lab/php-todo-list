@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Habits API Test</title>
+    <style>
+        body {
+            background: #0d0d0d;
+            color: white;
+            font-family: Arial;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #111;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 { color: #4aa3ff; }
+        .section {
+            margin: 20px 0;
+            border: 1px solid #222;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        input, textarea {
+            background: #1a1a1a;
+            color: white;
+            border: 1px solid #222;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 10px 0;
+        }
+        button {
+            background: #4aa3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .response {
+            background: #0d0d0d;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #4aa3ff;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #d32f2f;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Habits API Test</h1>
+        
+        <div class="section">
+            <h2>1. Setup Database</h2>
+            <button onclick="setupDatabase()">Create Tables</button>
+            <div id="setupResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>2. Add Habit</h2>
+            <label>Habit Name:</label>
+            <input type="text" id="habitName" placeholder="e.g., Exercise" value="Exercise">
+            <label>Color:</label>
+            <input type="color" id="habitColor" value="#4aa3ff">
+            <button onclick="addHabit()">Add Habit</button>
+            <div id="addResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>3. Get Habits</h2>
+            <button onclick="getHabits()">Load Habits</button>
+            <div id="habitsResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>4. Check Habit Completion</h2>
+            <label>Habit ID:</label>
+            <input type="number" id="habitId" placeholder="1" value="1">
+            <label>Date (YYYY-MM-DD):</label>
+            <input type="date" id="checkDate" id="checkDate">
+            <label>Completed:</label>
+            <input type="checkbox" id="checkCompleted" checked style="width: auto;">
+            <button onclick="checkHabit()">Mark Habit</button>
+            <div id="checkResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>5. Get Habit Stats</h2>
+            <label>Habit ID:</label>
+            <input type="number" id="statsHabitId" placeholder="1" value="1">
+            <button onclick="getHabitStats()">Get Stats (Last 30 Days)</button>
+            <div id="statsResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Connection Status</h2>
+            <button onclick="checkAuth()">Check Authentication</button>
+            <div id="authResponse" class="response" style="display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date
+        document.getElementById('checkDate').valueAsDate = new Date();
+
+        function showResponse(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = 'response ' + (isSuccess ? 'success' : 'error');
+            element.style.display = 'block';
+        }
+
+        function setupDatabase() {
+            fetch('setup-habits.php')
+                .then(r => r.text())
+                .then(data => {
+                    showResponse('setupResponse', data);
+                })
+                .catch(err => showResponse('setupResponse', err.message, false));
+        }
+
+        function addHabit() {
+            const name = document.getElementById('habitName').value;
+            const color = document.getElementById('habitColor').value;
+
+            if (!name) {
+                alert('Please enter a habit name');
+                return;
+            }
+
+            fetch('api.php?action=addHabit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, color })
+            })
+            .then(r => r.json())
+            .then(data => {
+                showResponse('addResponse', data, data.success);
+                if (data.success) {
+                    document.getElementById('habitName').value = '';
+                }
+            })
+            .catch(err => showResponse('addResponse', { error: err.message }, false));
+        }
+
+        function getHabits() {
+            fetch('api.php?action=getHabits')
+                .then(r => r.json())
+                .then(data => showResponse('habitsResponse', data, data.success))
+                .catch(err => showResponse('habitsResponse', { error: err.message }, false));
+        }
+
+        function checkHabit() {
+            const habitId = document.getElementById('habitId').value;
+            const date = document.getElementById('checkDate').value;
+            const checked = document.getElementById('checkCompleted').checked ? 1 : 0;
+
+            fetch('api.php?action=checkHabit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ habit_id: habitId, date, checked })
+            })
+            .then(r => r.json())
+            .then(data => showResponse('checkResponse', data, data.success))
+            .catch(err => showResponse('checkResponse', { error: err.message }, false));
+        }
+
+        function getHabitStats() {
+            const habitId = document.getElementById('statsHabitId').value;
+
+            fetch(`api.php?action=getHabitStats&id=${habitId}&days=30`)
+                .then(r => r.json())
+                .then(data => showResponse('statsResponse', data, data.success))
+                .catch(err => showResponse('statsResponse', { error: err.message }, false));
+        }
+
+        function checkAuth() {
+            fetch('api.php?action=getProfile')
+                .then(r => r.json())
+                .then(data => showResponse('authResponse', data, data.success))
+                .catch(err => showResponse('authResponse', { error: err.message }, false));
+        }
+    </script>
+</body>
+</html>

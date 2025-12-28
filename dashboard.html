@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            justify-content: space-between;
+            align-items: center;
+            background: #111;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+
+        nav a {
+            color: #4aa3ff;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        nav a:hover, nav a.active {
+            background: #4aa3ff;
+            color: white;
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-info {
+            color: #79b7ff;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #b71c1c;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #4aa3ff;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 36px;
+            text-shadow: 0 0 20px rgba(74, 163, 255, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+            border: 2px solid #4aa3ff;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(74, 163, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(74, 163, 255, 0.3);
+        }
+
+        .stat-label {
+            color: #79b7ff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            color: #4aa3ff;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .stat-subtext {
+            color: #666;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .chart-title {
+            color: #4aa3ff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .habits-overview {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+
+        .habits-overview h2 {
+            color: #4aa3ff;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .habit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #0d0d0d;
+            border-left: 4px solid #4aa3ff;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .habit-item:hover {
+            background: #151515;
+            transform: translateX(5px);
+        }
+
+        .habit-name {
+            color: #79b7ff;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .habit-streak {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .streak-icon {
+            font-size: 20px;
+        }
+
+        .habit-completion {
+            width: 100px;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .completion-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4aa3ff, #79b7ff);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+            font-size: 18px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #4aa3ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            nav > div {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div>
+                <a href="index.html">My Tasks</a>
+                <a href="history.html">History</a>
+                <a href="habits.html">Daily Habits</a>
+                <a href="dashboard.html" class="active">Dashboard</a>
+                <a href="profile.html">Profile</a>
+            </div>
+            <div class="nav-right">
+                <span class="user-info" id="username"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>📊 Dashboard & Statistics</h1>
+
+        <div id="loadingState" class="loading">
+            <div class="spinner"></div>
+            Loading your statistics...
+        </div>
+
+        <div id="mainContent" style="display: none;">
+            <!-- Overall Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Habits</div>
+                    <div class="stat-value" id="totalHabits">0</div>
+                    <div class="stat-subtext">Active habits</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Days Tracked</div>
+                    <div class="stat-value" id="daysTracked">0</div>
+                    <div class="stat-subtext">Total tracking records</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Completion Rate</div>
+                    <div class="stat-value" id="avgCompletion">0%</div>
+                    <div class="stat-subtext">Last 30 days average</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Tasks Completed</div>
+                    <div class="stat-value" id="tasksCompleted">0</div>
+                    <div class="stat-subtext">Total tasks marked done</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="chart-title">Daily Completion (Last 7 Days)</div>
+                    <canvas id="dailyChart"></canvas>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Habit Completion Distribution</div>
+                    <canvas id="habitChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Habits Overview -->
+            <div class="habits-overview">
+                <h2>🎯 Your Habits</h2>
+                <div id="habitsContainer" class="no-data">No habits created yet</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartsInitialized = false;
+        let dailyChartInstance = null;
+        let habitChartInstance = null;
+
+        function checkAuth() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('username').textContent = 'Welcome, ' + username;
+                return true;
+            }
+            fetch('session-check.php')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user_id) {
+                        localStorage.setItem('username', data.username || 'User');
+                        document.getElementById('username').textContent = 'Welcome, ' + (data.username || 'User');
+                    } else {
+                        console.warn('Not authenticated, redirecting...');
+                        window.location.href = 'auth.php';
+                    }
+                })
+                .catch((err) => {
+                    console.error('Auth check failed:', err);
+                    window.location.href = 'auth.php';
+                });
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('api.php?action=logout')
+                    .then(res => res.json())
+                    .then(data => {
+                        localStorage.removeItem('username');
+                        window.location.href = 'auth.php';
+                    });
+            }
+        }
+
+        function loadDashboardData() {
+            console.log('Starting dashboard data load...');
+            
+            Promise.all([
+                fetch('api.php?action=getUserStats').then(r => {
+                    console.log('getUserStats response:', r.status);
+                    return r.json();
+                }),
+                fetch('api.php?action=getHabits').then(r => {
+                    console.log('getHabits response:', r.status);
+                    return r.json();
+                }),
+                fetch('api.php?action=getTasks').then(r => {
+                    console.log('getTasks response:', r.status);
+                    return r.json();
+                })
+            ])
+            .then(([statsData, habitsData, tasksData]) => {
+                console.log('Dashboard data received:', {statsData, habitsData, tasksData});
+                
+                // Check for auth errors
+                if (statsData && !statsData.success && statsData.message === 'Not authenticated') {
+                    console.warn('Not authenticated - redirecting to login');
+                    document.getElementById('loadingState').innerHTML = 
+                        '<div class="no-data">Session expired. <a href="auth.php">Please log in again</a></div>';
+                    return;
+                }
+                
+                // Display content even if some calls fail
+                try {
+                    if (statsData && statsData.success) {
+                        displayStats(statsData.stats);
+                    } else {
+                        console.warn('Stats failed:', statsData);
+                        document.getElementById('totalHabits').textContent = 0;
+                        document.getElementById('daysTracked').textContent = 0;
+                        document.getElementById('avgCompletion').textContent = '0%';
+                    }
+                    
+                    if (habitsData && habitsData.success) {
+                        displayHabits(habitsData.habits);
+                        loadHabitDetails(habitsData.habits);
+                        createCharts(habitsData.habits, tasksData && tasksData.tasks ? tasksData.tasks : []);
+                    } else {
+                        console.warn('Habits failed:', habitsData);
+                        document.getElementById('habitsContainer').innerHTML = '<div class="no-data">No habits created yet</div>';
+                    }
+                    
+                    if (tasksData && tasksData.success) {
+                        // Task data already processed
+                    } else {
+                        console.warn('Tasks failed:', tasksData);
+                    }
+                    
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                } catch (error) {
+                    console.error('Error processing dashboard data:', error);
+                    document.getElementById('loadingState').innerHTML = 
+                        '<div class="no-data">Error loading data. <a href="javascript:location.reload()">Refresh page</a> or <a href="auth.php">log in again</a></div>';
+                }
+            })
+            .catch(err => {
+                console.error('Error loading dashboard:', err);
+                document.getElementById('loadingState').innerHTML = 
+                    '<div class="no-data">Network error. <a href="javascript:location.reload()">Refresh page</a></div>';
+            });
+        }
+
+        function displayStats(stats) {
+            if (!stats) {
+                stats = {total_habits: 0, days_tracked: 0, avg_completion: 0};
+            }
+            document.getElementById('totalHabits').textContent = stats.total_habits || 0;
+            document.getElementById('daysTracked').textContent = stats.days_tracked || 0;
+            document.getElementById('avgCompletion').textContent = (stats.avg_completion || 0).toFixed(1) + '%';
+            
+            // Count completed tasks
+            fetch('api.php?action=getHistory')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.success) {
+                        document.getElementById('tasksCompleted').textContent = data.tasks ? data.tasks.length : 0;
+                    } else {
+                        document.getElementById('tasksCompleted').textContent = 0;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading task count:', err);
+                    document.getElementById('tasksCompleted').textContent = 0;
+                });
+        }
+
+        function displayHabits(habits) {
+            const container = document.getElementById('habitsContainer');
+            
+            if (!habits || habits.length === 0) {
+                container.innerHTML = '<div class="no-data">No habits created yet. <a href="habits.html">Create one</a></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            habits.forEach(habit => {
+                const habitEl = document.createElement('div');
+                habitEl.className = 'habit-item';
+                habitEl.style.borderLeftColor = habit.color || '#4aa3ff';
+                
+                habitEl.innerHTML = `
+                    <div class="habit-name">${habit.name}</div>
+                    <div style="flex: 1;"></div>
+                    <div class="habit-completion">
+                        <div class="completion-bar" id="completion-${habit.id}" style="width: 0%"></div>
+                    </div>
+                    <div class="habit-streak">
+                        <span class="streak-icon">🔥</span>
+                        <span id="streak-${habit.id}">0</span> days
+                    </div>
+                `;
+
+                container.appendChild(habitEl);
+            });
+        }
+
+        function loadHabitDetails(habits) {
+            if (!habits) return;
+            
+            habits.forEach(habit => {
+                fetch(`api.php?action=getHabitDetails&id=${habit.id}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            const completionEl = document.getElementById(`completion-${habit.id}`);
+                            const streakEl = document.getElementById(`streak-${habit.id}`);
+                            
+                            if (completionEl) completionEl.style.width = (data.completion || 0) + '%';
+                            if (streakEl) streakEl.textContent = data.streak || 0;
+                        } else {
+                            console.warn(`Failed to load details for habit ${habit.id}:`, data);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(`Error loading habit details for ${habit.id}:`, err);
+                    });
+            });
+        }
+
+        function createCharts(habits, tasks) {
+            try {
+                // Daily completion chart
+                if (habits && habits.length > 0) {
+                    const dailyData = getLastSevenDaysData(habits);
+                    createDailyChart(dailyData);
+                    createHabitChart(habits);
+                } else {
+                    console.warn('No habits available for charts');
+                }
+            } catch (error) {
+                console.error('Error creating charts:', error);
+            }
+        }
+
+        function getLastSevenDaysData(habits) {
+            const labels = [];
+            const data = [];
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+            }
+
+            // Placeholder data - in production would fetch actual data
+            if (habits && habits.length > 0) {
+                habits.forEach(() => {
+                    for (let i = 0; i < 7; i++) {
+                        data[i] = (data[i] || 0) + Math.random() * 100;
+                    }
+                });
+            }
+
+            return { 
+                labels, 
+                data: data.length > 0 ? data.slice(0, 7).map(v => Math.round(v)) : [0, 0, 0, 0, 0, 0, 0]
+            };
+        }
+
+        function createDailyChart(data) {
+            const ctx = document.getElementById('dailyChart');
+            if (!ctx) return;
+
+            if (dailyChartInstance) dailyChartInstance.destroy();
+
+            dailyChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: data.data,
+                        borderColor: '#4aa3ff',
+                        backgroundColor: 'rgba(74, 163, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#4aa3ff',
+                        pointBorderColor: '#79b7ff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            ticks: { color: '#666' },
+                            grid: { color: '#222' }
+                        },
+                        x: {
+                            ticks: { color: '#666' },
+                            grid: { color: '#222' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createHabitChart(habits) {
+            const ctx = document.getElementById('habitChart');
+            if (!ctx) return;
+
+            if (habitChartInstance) habitChartInstance.destroy();
+
+            const habitNames = habits.map(h => h.name);
+            const colors = habits.map(h => h.color || '#4aa3ff');
+
+            habitChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: habitNames,
+                    datasets: [{
+                        data: habits.map(() => Math.random() * 100),
+                        backgroundColor: colors,
+                        borderColor: '#111',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#79b7ff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadDashboardData();
+            // Refresh every 30 seconds
+            setInterval(loadDashboardData, 30000);
+        });
+    </script>
+</body>
+</html>

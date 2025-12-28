@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal API Test</title>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+        .box { background: #1a1a1a; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #00ff00; }
+        .error { border-left-color: #ff0000; color: #ff6666; }
+        button { background: #00ff00; color: #000; padding: 10px 15px; margin: 5px; cursor: pointer; }
+        code { background: #000; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>TEST 1: Are you logged in?</h1>
+    <button onclick="test1()">Test</button>
+    <div id="test1" class="box">Click button...</div>
+
+    <h1>TEST 2: Can server respond?</h1>
+    <button onclick="test2()">Test</button>
+    <div id="test2" class="box">Click button...</div>
+
+    <h1>TEST 3: getUserStats API</h1>
+    <button onclick="test3()">Test</button>
+    <div id="test3" class="box">Click button...</div>
+
+    <script>
+        function test1() {
+            const el = document.getElementById('test1');
+            fetch('session-check.php')
+                .then(r => r.text())
+                .then(text => {
+                    el.textContent = text;
+                    if (text.includes('"user_id"')) {
+                        if (!text.includes('"user_id":null')) {
+                            el.className = 'box';
+                        } else {
+                            el.className = 'box error';
+                        }
+                    }
+                })
+                .catch(e => {
+                    el.textContent = 'ERROR: ' + e.message;
+                    el.className = 'box error';
+                });
+        }
+
+        function test2() {
+            const el = document.getElementById('test2');
+            fetch('index.html')
+                .then(r => {
+                    el.textContent = 'Status: ' + r.status + '\nServer is responding!';
+                    el.className = 'box';
+                })
+                .catch(e => {
+                    el.textContent = 'ERROR: ' + e.message;
+                    el.className = 'box error';
+                });
+        }
+
+        function test3() {
+            const el = document.getElementById('test3');
+            fetch('api.php?action=getUserStats')
+                .then(r => r.text())
+                .then(text => {
+                    el.textContent = 'Raw Response:\n\n' + text;
+                    if (text.includes('"success":true')) {
+                        el.className = 'box';
+                    } else {
+                        el.className = 'box error';
+                    }
+                })
+                .catch(e => {
+                    el.textContent = 'ERROR: ' + e.message;
+                    el.className = 'box error';
+                });
+        }
+
+        // Auto-run tests
+        window.addEventListener('load', () => {
+            test1();
+            setTimeout(test2, 500);
+            setTimeout(test3, 1000);
+        });
+    </script>
+</body>
+</html>

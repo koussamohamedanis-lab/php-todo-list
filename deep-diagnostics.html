@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Deep API Diagnostics</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; }
+        .section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4aa3ff;
+        }
+        .success { border-left-color: #4caf50; background: #1a2a1a; }
+        .error { border-left-color: #f44336; background: #2a1a1a; }
+        .warning { border-left-color: #ff9800; background: #2a2a1a; }
+        button {
+            background: #4aa3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px 5px 5px 0;
+            font-family: monospace;
+        }
+        button:hover { background: #2196F3; }
+        code {
+            display: block;
+            background: #000;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            overflow-x: auto;
+            color: #0f0;
+        }
+        .response-header {
+            color: #ffff00;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Deep API Diagnostics - Find the Real Problem</h1>
+
+        <div class="section">
+            <h2>Step 1: Check Server Connectivity</h2>
+            <button onclick="testServerAlive()">Test Server Alive</button>
+            <div id="server-alive"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 2: Check Session on Server</h2>
+            <button onclick="checkSessionPHP()">Check Session via PHP</button>
+            <div id="session-check"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 3: Test Each API Raw Response</h2>
+            <button onclick="testRawAPI('getUserStats')">getUserStats (Raw)</button>
+            <button onclick="testRawAPI('getHabits')">getHabits (Raw)</button>
+            <button onclick="testRawAPI('getTasks')">getTasks (Raw)</button>
+            <div id="raw-api"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 4: PHP Error Log Check</h2>
+            <button onclick="checkPHPErrors()">Check PHP Errors</button>
+            <div id="php-errors"></div>
+        </div>
+
+        <div class="section">
+            <h2>Step 5: Database Connection Test</h2>
+            <button onclick="testDatabaseConnection()">Test Database</button>
+            <div id="db-test"></div>
+        </div>
+
+        <div class="section warning">
+            <h2>Auto-Diagnostic (Click to Run All)</h2>
+            <button onclick="runAllTests()" style="background: #ff9800; font-size: 16px;">RUN ALL TESTS</button>
+            <div id="auto-results"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(elementId, message, isError = false) {
+            const el = document.getElementById(elementId);
+            el.innerHTML += (isError ? '❌ ' : '✓ ') + message + '\n';
+        }
+
+        function testServerAlive() {
+            const el = document.getElementById('server-alive');
+            el.innerHTML = 'Testing...';
+
+            fetch('index.html')
+                .then(r => {
+                    el.innerHTML = `<div class="success">
+                        ✓ Server is responding<br>
+                        Status: ${r.status}<br>
+                        This means Apache is running
+                    </div>`;
+                })
+                .catch(err => {
+                    el.innerHTML = `<div class="error">
+                        ❌ Server not responding<br>
+                        Error: ${err.message}<br>
+                        Apache might not be running!
+                    </div>`;
+                });
+        }
+
+        function checkSessionPHP() {
+            const el = document.getElementById('session-check');
+            el.innerHTML = 'Testing...';
+
+            fetch('session-check.php')
+                .then(r => r.text())
+                .then(text => {
+                    try {
+                        const data = JSON.parse(text);
+                        const loggedIn = data.user_id;
+                        const className = loggedIn ? 'success' : 'error';
+                        el.innerHTML = `<div class="${className}">
+                            ${loggedIn ? '✓' : '❌'} Session Status<br>
+                            <code>${JSON.stringify(data, null, 2)}</code>
+                        </div>`;
+                    } catch (e) {
+                        el.innerHTML = `<div class="error">
+                            ❌ Invalid JSON response<br>
+                            Error: ${e.message}<br>
+                            Raw response:<br>
+                            <code>${text}</code>
+                        </div>`;
+                    }
+                })
+                .catch(err => {
+                    el.innerHTML = `<div class="error">
+                        ❌ Fetch error: ${err.message}
+                    </div>`;
+                });
+        }
+
+        function testRawAPI(action) {
+            const el = document.getElementById('raw-api');
+            if (!el.innerHTML.includes('Testing')) {
+                el.innerHTML = '';
+            }
+
+            const heading = `<div class="response-header">>>> Testing ${action}</div>`;
+            el.innerHTML += heading;
+
+            fetch(`api.php?action=${action}`)
+                .then(r => {
+                    const info = `Status: ${r.status}\nContent-Type: ${r.headers.get('Content-Type')}\n`;
+                    el.innerHTML += `<code>${info}</code>`;
+                    return r.text();
+                })
+                .then(text => {
+                    el.innerHTML += `<code>Raw Response:\n${text}</code>`;
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        const className = data.success ? 'success' : 'error';
+                        el.innerHTML += `<div class="${className}">
+                            ${data.success ? '✓ Success' : '❌ Failed'}<br>
+                            Message: ${data.message || 'N/A'}<br>
+                            Keys: ${Object.keys(data).join(', ')}
+                        </div>`;
+                    } catch (e) {
+                        el.innerHTML += `<div class="error">
+                            ❌ Not valid JSON<br>
+                            Parse error: ${e.message}
+                        </div>`;
+                    }
+                })
+                .catch(err => {
+                    el.innerHTML += `<div class="error">
+                        ❌ Fetch error: ${err.message}
+                    </div>`;
+                });
+        }
+
+        function checkPHPErrors() {
+            const el = document.getElementById('php-errors');
+            el.innerHTML = 'Checking...';
+
+            fetch('check-php-errors.php')
+                .then(r => r.text())
+                .then(text => {
+                    el.innerHTML = `<code>${text}</code>`;
+                })
+                .catch(err => {
+                    el.innerHTML = `Error: ${err.message}`;
+                });
+        }
+
+        function testDatabaseConnection() {
+            const el = document.getElementById('db-test');
+            el.innerHTML = 'Testing...';
+
+            fetch('test-db-connection.php')
+                .then(r => r.text())
+                .then(text => {
+                    const className = text.includes('Connected') ? 'success' : 'error';
+                    el.innerHTML = `<div class="${className}"><code>${text}</code></div>`;
+                })
+                .catch(err => {
+                    el.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+                });
+        }
+
+        function runAllTests() {
+            const el = document.getElementById('auto-results');
+            el.innerHTML = '🔄 Running all tests...\n\n';
+
+            testServerAlive();
+            setTimeout(() => {
+                checkSessionPHP();
+                el.innerHTML += '[1/5] Server check done\n';
+            }, 500);
+
+            setTimeout(() => {
+                testRawAPI('getUserStats');
+                el.innerHTML += '[2/5] Session check done\n';
+            }, 1000);
+
+            setTimeout(() => {
+                testRawAPI('getHabits');
+                el.innerHTML += '[3/5] getUserStats done\n';
+            }, 1500);
+
+            setTimeout(() => {
+                testRawAPI('getTasks');
+                el.innerHTML += '[4/5] getHabits done\n';
+            }, 2000);
+
+            setTimeout(() => {
+                testDatabaseConnection();
+                el.innerHTML += '[5/5] getTasks done\n';
+                el.innerHTML += '\n✅ All tests completed! Check sections above for results.';
+            }, 2500);
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            document.getElementById('auto-results').innerHTML = 
+                '👆 Click "RUN ALL TESTS" above to automatically test everything.';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+# ⚡ QUICK REFERENCE - Error Persists
+
+## IMMEDIATE ACTION NEEDED
+
+The error "Error loading data. Please refresh." is still happening because **the APIs are actually failing**, not because of session issues.
+
+### Right Now - Do This:
+
+1. **Open**: http://localhost/To-Do List/simple-api-test.html
+2. **Look at the boxes** - Are they GREEN (success) or RED (failed)?
+3. **Take a screenshot** and tell me what you see
+
+### That's It for Now
+
+The test page will show me exactly what's broken.
+
+---
+
+## What Each Color Means
+
+**🟢 GREEN boxes** = "API Call Successful!"
+→ The API is working
+→ Try a different browser or clear cache
+→ Problem is client-side
+
+**🔴 RED boxes** = Error or message shown
+→ Tell me the error message
+→ I can identify the exact problem
+→ Will give you a specific fix
+
+**⚠️ Network error** = Can't reach server
+→ Apache is probably not running
+→ Open XAMPP Control Panel
+→ Click "Start" next to Apache
+
+---
+
+## If Apache Isn't Running
+
+1. Open XAMPP Control Panel
+2. Find "Apache" row
+3. Click "Start" if it's red
+4. Wait 10 seconds
+5. Try dashboard again
+
+---
+
+## Alternative Quick Tests
+
+If simple-api-test.html doesn't work, try:
+
+1. **Check Server**: http://localhost/To-Do List/index.html
+   - If loads → Server OK
+   - If doesn't load → Apache down
+
+2. **Check Database**: http://localhost/To-Do List/test-db-connection.php
+   - If shows "Connected" → Database OK
+   - If shows error → MySQL down
+
+3. **Check PHP**: http://localhost/To-Do List/check-php-errors.php
+   - Shows PHP info and errors
+
+---
+
+## The 3-Step Fix
+
+1. **Open**: simple-api-test.html
+2. **Screenshot**: What you see
+3. **Tell me**: Green or Red? What message?
+
+→ I'll give you the exact next step
+
+---
+
+That's all you need to do right now!

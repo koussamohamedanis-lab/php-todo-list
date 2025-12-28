@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔧 Habits Debugger</title>
+    <style>
+        body {
+            background: #0d0d0d;
+            color: white;
+            font-family: Arial;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #4aa3ff; }
+        .check { margin: 20px 0; padding: 15px; background: #111; border: 1px solid #222; border-radius: 8px; }
+        .pass { border-left: 4px solid #28a745; }
+        .fail { border-left: 4px solid #d32f2f; }
+        .warn { border-left: 4px solid #ff9800; }
+        .status { margin: 5px 0; }
+        .label { font-weight: bold; color: #4aa3ff; }
+        button { background: #4aa3ff; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 10px 0; }
+        button:hover { background: #2980b9; }
+        .result { background: #0d0d0d; padding: 15px; border-radius: 4px; border: 1px solid #4aa3ff; margin: 10px 0; }
+        pre { overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Habits System Debugger</h1>
+
+        <div class="check" id="check1">
+            <span class="label">✓ STEP 1: Check Authentication</span>
+            <div class="status">Checking if you're logged in...</div>
+            <button onclick="checkAuth()">Test Auth</button>
+            <div class="result" id="result1" style="display:none;"></div>
+        </div>
+
+        <div class="check" id="check2">
+            <span class="label">✓ STEP 2: Check Database Tables</span>
+            <div class="status">Verifying tables exist in database...</div>
+            <button onclick="checkTables()">Check Tables</button>
+            <div class="result" id="result2" style="display:none;"></div>
+        </div>
+
+        <div class="check" id="check3">
+            <span class="label">✓ STEP 3: Test API - Get Habits</span>
+            <div class="status">Loading all habits...</div>
+            <button onclick="testGetHabits()">Get Habits</button>
+            <div class="result" id="result3" style="display:none;"></div>
+        </div>
+
+        <div class="check" id="check4">
+            <span class="label">✓ STEP 4: Create Test Habit</span>
+            <div class="status">Adding a test habit...</div>
+            <button onclick="testAddHabit()">Add Test Habit</button>
+            <div class="result" id="result4" style="display:none;"></div>
+        </div>
+
+        <div class="check" id="check5">
+            <span class="label">✓ STEP 5: Test Checking Habit</span>
+            <div class="status">Try to check a habit for today...</div>
+            <button onclick="testCheckHabit()">Check Habit Today</button>
+            <div class="result" id="result5" style="display:none;"></div>
+        </div>
+
+        <div class="check" id="check6">
+            <span class="label">✓ STEP 6: Test Getting Stats</span>
+            <div class="status">Retrieve habit statistics...</div>
+            <button onclick="testGetStats()">Get Stats</button>
+            <div class="result" id="result6" style="display:none;"></div>
+        </div>
+
+        <div class="check" style="background: #1a1a1a; border: 2px solid #4aa3ff; margin-top: 30px;">
+            <span class="label">📝 FINAL RESULT</span>
+            <div class="result" id="finalResult" style="display:none;"></div>
+            <div style="margin-top: 20px;">
+                <p>✅ If all tests pass, go back to <strong><a href="habits.html" style="color: #4aa3ff;">habits.html</a></strong></p>
+                <p>❌ If any test fails, see the error details above</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastHabitId = null;
+
+        function show(id, success, message, data) {
+            const result = document.getElementById(id);
+            result.style.display = 'block';
+            result.textContent = message + '\n\n' + JSON.stringify(data, null, 2);
+            document.getElementById('check' + id.replace('result', '')).className = 'check ' + (success ? 'pass' : 'fail');
+        }
+
+        async function checkAuth() {
+            try {
+                const res = await fetch('api.php?action=getProfile');
+                const data = await res.json();
+                
+                if (data.success) {
+                    show('result1', true, '✅ Logged in as: ' + data.user.username, data);
+                } else {
+                    show('result1', false, '❌ NOT LOGGED IN - Please login first', data);
+                }
+            } catch (err) {
+                show('result1', false, '❌ Error: ' + err.message, {});
+            }
+        }
+
+        async function checkTables() {
+            try {
+                const res = await fetch('check-database.php');
+                const data = await res.json();
+                
+                if (data.success) {
+                    show('result2', true, '✅ Tables exist:\n' + data.tables.join('\n'), data);
+                } else {
+                    show('result2', false, '❌ ' + data.message, data);
+                }
+            } catch (err) {
+                show('result2', false, '❌ Cannot check tables (need to create check-database.php)', {error: err.message});
+            }
+        }
+
+        async function testGetHabits() {
+            try {
+                const res = await fetch('api.php?action=getHabits');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const count = data.habits.length;
+                    show('result3', true, `✅ Found ${count} habit(s)`, data);
+                } else {
+                    show('result3', false, '❌ ' + data.message, data);
+                }
+            } catch (err) {
+                show('result3', false, '❌ Error: ' + err.message, {});
+            }
+        }
+
+        async function testAddHabit() {
+            try {
+                const res = await fetch('api.php?action=addHabit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: 'Test Habit ' + Date.now(), 
+                        color: '#FF5733' 
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Get habits again to get the new ID
+                    const res2 = await fetch('api.php?action=getHabits');
+                    const habits = await res2.json();
+                    if (habits.habits.length > 0) {
+                        lastHabitId = habits.habits[0].id;
+                        show('result4', true, `✅ Habit added! ID: ${lastHabitId}`, data);
+                    } else {
+                        show('result4', false, '❌ Could not find new habit', data);
+                    }
+                } else {
+                    show('result4', false, '❌ ' + data.message, data);
+                }
+            } catch (err) {
+                show('result4', false, '❌ Error: ' + err.message, {});
+            }
+        }
+
+        async function testCheckHabit() {
+            if (!lastHabitId) {
+                show('result5', false, '❌ No habit ID - Run "Add Test Habit" first', {});
+                return;
+            }
+
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const res = await fetch('api.php?action=checkHabit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        habit_id: lastHabitId,
+                        date: today,
+                        checked: 1
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    show('result5', true, `✅ Habit checked for ${today}`, data);
+                } else {
+                    show('result5', false, '❌ ' + data.message, data);
+                }
+            } catch (err) {
+                show('result5', false, '❌ Error: ' + err.message, {});
+            }
+        }
+
+        async function testGetStats() {
+            if (!lastHabitId) {
+                show('result6', false, '❌ No habit ID - Run "Add Test Habit" first', {});
+                return;
+            }
+
+            try {
+                const res = await fetch(`api.php?action=getHabitStats&id=${lastHabitId}&days=30`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    show('result6', true, `✅ Got ${data.stats.length} stat records`, data);
+                } else {
+                    show('result6', false, '❌ ' + data.message, data);
+                }
+            } catch (err) {
+                show('result6', false, '❌ Error: ' + err.message, {});
+            }
+        }
+
+        // Run all checks on load
+        window.addEventListener('load', () => {
+            console.log('Starting debug tests...');
+            checkAuth();
+            setTimeout(() => testGetHabits(), 500);
+        });
+    </script>
+</body>
+</html>

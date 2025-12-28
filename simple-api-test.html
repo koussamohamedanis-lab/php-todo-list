@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple API Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .box {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #4aa3ff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #2196F3; }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            color: #0f0;
+        }
+        .success { border-left: 4px solid #4caf50; }
+        .error { border-left: 4px solid #f44336; }
+    </style>
+</head>
+<body>
+    <h1>API Test - See Exactly What's Breaking</h1>
+
+    <div class="box">
+        <h2>1. Are you logged in?</h2>
+        <button onclick="checkLogin()">Check Login Status</button>
+        <pre id="login-check"></pre>
+    </div>
+
+    <div class="box">
+        <h2>2. Test getUserStats API</h2>
+        <button onclick="testAPI('getUserStats')">Test getUserStats</button>
+        <pre id="result-getUserStats"></pre>
+    </div>
+
+    <div class="box">
+        <h2>3. Test getHabits API</h2>
+        <button onclick="testAPI('getHabits')">Test getHabits</button>
+        <pre id="result-getHabits"></pre>
+    </div>
+
+    <div class="box">
+        <h2>4. Test getTasks API</h2>
+        <button onclick="testAPI('getTasks')">Test getTasks</button>
+        <pre id="result-getTasks"></pre>
+    </div>
+
+    <div class="box">
+        <h2>5. Quick Actions</h2>
+        <button onclick="location.href='auth.php'">Go to Login Page</button>
+        <button onclick="location.href='index.html'">Go to Main Page</button>
+        <button onclick="location.href='deep-diagnostics.html'">Open Deep Diagnostics</button>
+        <button onclick="location.reload()">Refresh This Page</button>
+    </div>
+
+    <script>
+        function checkLogin() {
+            const el = document.getElementById('login-check');
+            el.textContent = 'Checking...';
+
+            fetch('session-check.php')
+                .then(r => r.json())
+                .then(data => {
+                    el.parentElement.className = data.user_id ? 'box success' : 'box error';
+                    el.textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(err => {
+                    el.parentElement.className = 'box error';
+                    el.textContent = 'ERROR: ' + err.message;
+                });
+        }
+
+        function testAPI(action) {
+            const el = document.getElementById('result-' + action);
+            el.textContent = 'Testing...';
+            el.parentElement.className = 'box';
+
+            fetch(`api.php?action=${action}`)
+                .then(r => {
+                    const status = r.status;
+                    const contentType = r.headers.get('Content-Type');
+                    return r.text().then(text => ({status, contentType, text}));
+                })
+                .then(({status, contentType, text}) => {
+                    let output = `HTTP ${status}\nContent-Type: ${contentType}\n\n`;
+
+                    try {
+                        const data = JSON.parse(text);
+                        output += JSON.stringify(data, null, 2);
+                        
+                        if (data.success) {
+                            el.parentElement.className = 'box success';
+                            output += '\n\n✓ API Call Successful!';
+                        } else {
+                            el.parentElement.className = 'box error';
+                            output += '\n\n✗ API returned error: ' + (data.message || 'Unknown error');
+                        }
+                    } catch (e) {
+                        el.parentElement.className = 'box error';
+                        output += text;
+                        output += '\n\n✗ Response is not valid JSON';
+                        output += '\nParse error: ' + e.message;
+                    }
+
+                    el.textContent = output;
+                })
+                .catch(err => {
+                    el.parentElement.className = 'box error';
+                    el.textContent = 'FETCH ERROR: ' + err.message + '\n\nThis means the server might not be responding.';
+                });
+        }
+
+        // Auto-check login on load
+        window.addEventListener('load', checkLogin);
+    </script>
+</body>
+</html>
